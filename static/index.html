@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Short video — demo pranka</title>
+<style>
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:#101014;color:white;font:16px system-ui;padding:20px}
+main{width:min(430px,100%);background:#1c1c24;border:1px solid #393944;border-radius:22px;padding:24px}
+h1{font-size:24px}.muted{color:#c5c5ce;line-height:1.5}.note{background:#30303a;border-radius:12px;padding:14px;font-size:14px}
+button{width:100%;padding:14px;margin-top:14px;border:0;border-radius:12px;background:#fe2c55;color:white;font-weight:bold;font-size:16px}
+label{display:flex;gap:10px;margin:18px 0;font-size:14px}input[type=file]{display:block;margin:14px 0;color:white}
+#status{margin-top:12px;color:#ddd}
+</style>
+<main>
+<div style="font-size:25px;font-weight:800">♪ short video</div>
+<div class="muted" style="font-size:13px">Niezależna strona żartobliwa — nie jest powiązana z TikTokiem.</div>
+<h1>Otwórz niespodziankę 🎬</h1>
+<p class="muted">To demonstracyjny prank. Możesz odtworzyć dźwięk albo dobrowolnie wybrać zdjęcie do przesłania.</p>
+<div class="note"><b>Informacja o zdjęciu</b><br>Jeśli wybierzesz zdjęcie i zaznaczysz zgodę, zostanie ono wysłane do prywatnego bota Telegram właściciela strony. Strona nie uruchamia aparatu ani mikrofonu.</div>
+<label><input id="consent" type="checkbox"> Zgadzam się na przesłanie wybranego przeze mnie zdjęcia właścicielowi strony.</label>
+<input id="photo" type="file" accept="image/jpeg,image/png,image/webp">
+<button id="send">Wyślij wybrane zdjęcie</button>
+<button id="sound">Odtwórz zabawny dźwięk</button>
+<div id="status" role="status"></div>
+<script>
+const status=document.querySelector('#status');
+document.querySelector('#send').onclick=async()=>{
+ const file=document.querySelector('#photo').files[0];
+ if(!document.querySelector('#consent').checked){status.textContent='Najpierw zaznacz zgodę.';return;}
+ if(!file){status.textContent='Najpierw wybierz zdjęcie.';return;}
+ const data=new FormData();data.append('consent','yes');data.append('photo',file);
+ try{const r=await fetch('/send-photo',{method:'POST',body:data});const j=await r.json();if(!r.ok)throw Error(j.detail||'Błąd');status.textContent='Zdjęcie wysłane do bota.';}
+ catch(e){status.textContent='Nie udało się wysłać: '+e.message;}
+};
+document.querySelector('#sound').onclick=()=>{
+ const c=new(window.AudioContext||window.webkitAudioContext)();
+ [660,880,740,990].forEach((f,i)=>{const o=c.createOscillator(),g=c.createGain();o.frequency.value=f;g.gain.setValueAtTime(.001,c.currentTime+i*.16);g.gain.exponentialRampToValueAtTime(.1,c.currentTime+i*.16+.02);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+i*.16+.13);o.connect(g);g.connect(c.destination);o.start(c.currentTime+i*.16);o.stop(c.currentTime+i*.16+.14);});
+ status.textContent='Prank! 😄';
+};
+</script></main>
